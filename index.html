@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dia de Sorte - Análise Profissional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                        'primary-dark': '#4B4BC8',
+                        'dia-sorte': '#D4B31A',
+                        'dia-sorte-light': '#E6C547',
+                        'dia-sorte-dark': '#B8991C',
+                        'sorteio-orange': '#FF6B35',
+                        'crescente-purple': '#8B5CF6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-2">
+                🍀 Dia de Sorte - Análise Profissional
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">
+                Análise histórica completa com frequências, repetições e sequências
+            </p>
+        </div>
+
+        <!-- Status de Carregamento -->
+        <div id="loadingSection" class="text-center mb-8">
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                <div class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">Carregando Dados Históricos</h3>
+                <p id="loadingStatus" class="text-blue-600 dark:text-blue-400 text-sm">Iniciando busca...</p>
+                <div class="mt-4 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div id="progressBar" class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div id="concursoAtual" class="text-xs text-gray-500 dark:text-gray-400 mt-2"></div>
+            </div>
+        </div>
+
+        <!-- Controles Principais -->
+        <div id="controlsSection" class="hidden mb-8">
+            <div class="flex flex-wrap gap-4 justify-center">
+                <button onclick="marcarSequencias()" class="px-6 py-3 bg-dia-sorte hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors">
+                    🔍 Marcar Sequências
+                </button>
+                <button onclick="resetarMarcacoes()" class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold transition-colors">
+                    🔄 Resetar Marcações
+                </button>
+                <button onclick="recarregarDados()" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors">
+                    📊 Recarregar Dados
+                </button>
+                <button onclick="exportarDados()" class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors">
+                    📋 Exportar Análise
+                </button>
+            </div>
+        </div>
+
+        <!-- Resumo Estatístico -->
+        <div id="resumoSection" class="hidden mb-8">
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">📈 Resumo Estatístico</h3>
+                <div class="grid md:grid-cols-5 gap-4">
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 text-center">
+                        <div id="totalConcursos" class="text-2xl font-bold text-primary">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Total de Concursos</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 text-center">
+                        <div id="repeticoesConsecutivas" class="text-2xl font-bold text-green-600">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Repetições Consecutivas</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 text-center">
+                        <div id="sequenciasSorteio" class="text-2xl font-bold text-orange-600">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Sequências (Ordem Sorteio)</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 text-center">
+                        <div id="sequenciasCrescente" class="text-2xl font-bold text-purple-600">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">Sequências (Ordem Crescente)</div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-700 rounded-lg p-4 text-center">
+                        <div id="percentualRepeticao" class="text-2xl font-bold text-red-600">0%</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">% Repetição Entre Jogos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Frequência de Números -->
+        <div id="frequenciaSection" class="hidden mb-8">
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">🎯 Frequência dos Números</h3>
+                <div id="numerosFrequencia" class="grid grid-cols-10 gap-2">
+                    <!-- Números com frequências serão exibidos aqui -->
+                </div>
+                <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                    <span class="inline-block w-4 h-4 bg-red-500 rounded mr-2"></span>Mais frequente
+                    <span class="inline-block w-4 h-4 bg-yellow-500 rounded mr-2 ml-4"></span>Médio
+                    <span class="inline-block w-4 h-4 bg-blue-500 rounded mr-2 ml-4"></span>Menos frequente
+                    <span class="inline-block w-4 h-4 bg-green-500 rounded mr-2 ml-4"></span>Sequência marcada
+                </div>
+            </div>
+        </div>
+
+        <!-- Análise de Sequências -->
+        <div id="sequenciasSection" class="hidden mb-8">
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <!-- Sequências na Ordem de Sorteio -->
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">📝 Sequências - Ordem de Sorteio</h4>
+                    <div id="sequenciasOrdemSorteio" class="space-y-2 max-h-64 overflow-y-auto">
+                        <!-- Sequências na ordem de sorteio -->
+                    </div>
+                </div>
+                <!-- Sequências em Ordem Crescente -->
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">📈 Sequências - Ordem Crescente</h4>
+                    <div id="sequenciasOrdemCrescente" class="space-y-2 max-h-64 overflow-y-auto">
+                        <!-- Sequências em ordem crescente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualização Tabular das Sequências -->
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-semibold text-gray-800 dark:text-white">📊 Visualização Tabular das Sequências</h4>
+                    <div class="flex gap-2">
+                        <button onclick="alternarVisualizacao('sorteio')" id="btnVisualizacaoSorteio" 
+                                class="px-4 py-2 bg-sorteio-orange text-white rounded-lg text-sm font-semibold transition-colors">
+                            Ordem Sorteio
+                        </button>
+                        <button onclick="alternarVisualizacao('crescente')" id="btnVisualizacaoCrescente" 
+                                class="px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-semibold transition-colors">
+                            Ordem Crescente
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="bg-white dark:bg-gray-700 rounded-lg border">
+                    <div class="overflow-x-auto overflow-y-auto max-h-96">
+                        <table id="tabelaSequencias" class="w-full text-xs">
+                            <thead class="sticky top-0 bg-gray-100 dark:bg-gray-600">
+                                <tr>
+                                    <th class="p-2 text-left font-semibold text-gray-800 dark:text-white border-r border-gray-300 dark:border-gray-500">Concurso</th>
+                                    <th class="p-2 text-center font-semibold text-gray-800 dark:text-white border-r border-gray-300 dark:border-gray-500">1º</th>
+                                    <th class="p-2 text-center font-semibold text-gray-800 dark:text-white border-r border-gray-300 dark:border-gray-500">2º</th>
+                                    <th class="p-2 text-center font-semibold text-gray-800 dark:text-white border-r border-gray-300 dark:border-gray-500">3º</th>
+                                    <th class="p-2 text-center font-semibold text-gray-800 dark:text-white border-r border-gray-300 dark:border-gray-500">4º</th>
+                                    <th class="p-2 text-center font-semibold text-gray-800 dark:text-white border-r border-gray-300 dark:border-gray-500">5º</th>
+                                    <th class="p-2 text-center font-semibold text-gray-800 dark:text-white border-r border-gray-300 dark:border-gray-500">6º</th>
+                                    <th class="p-2 text-center font-semibold text-gray-800 dark:text-white border-r border-gray-300 dark:border-gray-500">7º</th>
+                                    <th class="p-2 text-center font-semibold text-gray-800 dark:text-white">Mês</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoTabelaSequencias">
+                                <!-- Dados serão inseridos dinamicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                    <div class="flex flex-wrap gap-4">
+                        <span class="flex items-center">
+                            <span class="inline-block w-4 h-4 bg-green-500 rounded mr-2"></span>Sequência de 2 números
+                        </span>
+                        <span class="flex items-center">
+                            <span class="inline-block w-4 h-4 bg-blue-500 rounded mr-2"></span>Sequência de 3 números
+                        </span>
+                        <span class="flex items-center">
+                            <span class="inline-block w-4 h-4 bg-purple-500 rounded mr-2"></span>Sequência de 4+ números
+                        </span>
+                        <span class="flex items-center">
+                            <span class="inline-block w-4 h-4 bg-yellow-500 rounded mr-2"></span>Número repetido do concurso anterior
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Análise de Repetições Consecutivas -->
+        <div id="repeticoesSection" class="hidden mb-8">
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">🔄 Análise de Repetições Consecutivas</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-300 dark:border-gray-600">
+                                <th class="text-left p-2 text-gray-800 dark:text-white">Número</th>
+                                <th class="text-left p-2 text-gray-800 dark:text-white">Repetições Consecutivas</th>
+                                <th class="text-left p-2 text-gray-800 dark:text-white">Maior Sequência</th>
+                                <th class="text-left p-2 text-gray-800 dark:text-white">Última Aparição</th>
+                                <th class="text-left p-2 text-gray-800 dark:text-white">Frequência Total (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaRepeticoes">
+                            <!-- Dados de repetições serão inseridos aqui -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico de Jogos -->
+        <div id="historicoSection" class="hidden">
+            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">📋 Histórico Completo dos Concursos</h3>
+                <div class="mb-4">
+                    <input type="text" id="filtroHistorico" placeholder="Filtrar por concurso ou números..." 
+                           class="w-full p-3 text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div class="max-h-96 overflow-y-auto">
+                    <div id="historicoJogos" class="space-y-2">
+                        <!-- Histórico será exibido aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let todosResultados = [];
+        let frequenciaNumeros = {};
+        let repeticoesConsecutivas = {};
+        let sequenciasOrdemSorteio = [];
+        let sequenciasOrdemCrescente = [];
+        let sequenciasMarcadas = [];
+        let estatisticas = {};
+
+        // Configurar modo escuro
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+
+            // Iniciar carregamento dos dados
+            carregarTodosDados();
+        });
+
+        async function carregarTodosDados() {
+            const statusElement = document.getElementById('loadingStatus');
+            const progressBar = document.getElementById('progressBar');
+            const concursoAtual = document.getElementById('concursoAtual');
+            
+            try {
+                statusElement.textContent = 'Buscando último concurso...';
+                
+                // Primeiro, buscar o último concurso para saber quantos existem
+                const ultimoResponse = await fetch('https://servicebus2.caixa.gov.br/portaldeloterias/api/diadesorte');
+                if (!ultimoResponse.ok) throw new Error('Erro ao buscar último concurso');
+                
+                const ultimoConcurso = await ultimoResponse.json();
+                const totalConcursos = ultimoConcurso.numero;
+                
+                statusElement.textContent = `Carregando ${totalConcursos} concursos...`;
+                todosResultados = [];
+                
+                // Carregar todos os concursos
+                for (let i = 1; i <= totalConcursos; i++) {
+                    try {
+                        concursoAtual.textContent = `Concurso ${i} de ${totalConcursos}`;
+                        
+                        const response = await fetch(`https://servicebus2.caixa.gov.br/portaldeloterias/api/diadesorte/${i}`);
+                        if (response.ok) {
+                            const dados = await response.json();
+                            
+                            if (dados && dados.listaDezenas && dados.listaDezenas.length === 7) {
+                                todosResultados.push({
+                                    concurso: dados.numero,
+                                    data: dados.dataApuracao,
+                                    numerosOrdemSorteio: dados.dezenasSorteadasOrdemSorteio ? 
+                                        dados.dezenasSorteadasOrdemSorteio.map(n => parseInt(n)) : 
+                                        dados.listaDezenas.map(n => parseInt(n)),
+                                    numerosOrdemCrescente: dados.listaDezenas.map(n => parseInt(n)),
+                                    local: dados.nomeMunicipioUFSorteio || dados.localSorteio || '',
+                                    mesSorte: dados.nomeTimeCoracaoMesSorte || '',
+                                    acumulado: dados.acumulado || false,
+                                    valorEstimado: dados.valorEstimadoProximoConcurso || 0,
+                                    premiacao: dados.listaRateioPremio || [],
+                                    observacao: dados.observacao || ''
+                                });
+                            }
+                        }
+                        
+                        // Atualizar barra de progresso
+                        const progresso = (i / totalConcursos) * 100;
+                        progressBar.style.width = `${progresso}%`;
+                        
+                        // Pequeno delay para não sobrecarregar a API
+                        if (i % 10 === 0) {
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                        }
+                        
+                    } catch (error) {
+                        console.warn(`Erro ao carregar concurso ${i}:`, error);
+                    }
+                }
+                
+                statusElement.textContent = 'Processando análises...';
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Processar todas as análises
+                analisarFrequencias();
+                analisarRepeticoesConsecutivas();
+                analisarSequencias();
+                calcularEstatisticas();
+                
+                // Exibir resultados
+                exibirResultados();
+                
+                statusElement.textContent = 'Concluído!';
+                document.getElementById('loadingSection').classList.add('hidden');
+                document.getElementById('controlsSection').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                statusElement.textContent = 'Erro ao carregar dados. Usando dados simulados...';
+                gerarDadosSimulados();
+                setTimeout(() => {
+                    document.getElementById('loadingSection').classList.add('hidden');
+                    document.getElementById('controlsSection').classList.remove('hidden');
+                    exibirResultados();
+                }, 2000);
+            }
+        }
+
+        function analisarFrequencias() {
+            frequenciaNumeros = {};
+            
+            // Inicializar contadores
+            for (let i = 1; i <= 31; i++) {
+                frequenciaNumeros[i] = { total: 0, porcentagem: 0 };
+            }
+            
+            // Contar frequências
+            todosResultados.forEach(resultado => {
+                resultado.numerosOrdemSorteio.forEach(numero => {
+                    frequenciaNumeros[numero].total++;
+                });
+            });
+            
+            // Calcular porcentagens
+            const totalConcursos = todosResultados.length;
+            for (let i = 1; i <= 31; i++) {
+                frequenciaNumeros[i].porcentagem = ((frequenciaNumeros[i].total / totalConcursos) * 100).toFixed(2);
+            }
+        }
+
+        function analisarRepeticoesConsecutivas() {
+            repeticoesConsecutivas = {};
+            
+            // Inicializar
+            for (let i = 1; i <= 31; i++) {
+                repeticoesConsecutivas[i] = {
+                    consecutivas: 0,
+                    maiorSequencia: 0,
+                    ultimaAparicao: 0,
+                    aparicoes: []
+                };
+            }
+            
+            // Analisar repetições entre jogos consecutivos
+            for (let i = 1; i < todosResultados.length; i++) {
+                const jogoAnterior = todosResultados[i - 1].numerosOrdemCrescente;
+                const jogoAtual = todosResultados[i].numerosOrdemCrescente;
+                
+                // Verificar números que se repetem
+                jogoAnterior.forEach(numero => {
+                    if (jogoAtual.includes(numero)) {
+                        repeticoesConsecutivas[numero].consecutivas++;
+                    }
+                    repeticoesConsecutivas[numero].aparicoes.push(i - 1);
+                });
+            }
+            
+            // Calcular maior sequência consecutiva para cada número
+            for (let numero = 1; numero <= 31; numero++) {
+                const aparicoes = repeticoesConsecutivas[numero].aparicoes;
+                let maiorSequencia = 0;
+                let sequenciaAtual = 0;
+                
+                for (let i = 0; i < aparicoes.length; i++) {
+                    if (i === 0 || aparicoes[i] === aparicoes[i - 1] + 1) {
+                        sequenciaAtual++;
+                    } else {
+                        maiorSequencia = Math.max(maiorSequencia, sequenciaAtual);
+                        sequenciaAtual = 1;
+                    }
+                }
+                maiorSequencia = Math.max(maiorSequencia, sequenciaAtual);
+                
+                repeticoesConsecutivas[numero].maiorSequencia = maiorSequencia;
+                repeticoesConsecutivas[numero].ultimaAparicao = aparicoes.length > 0 ? Math.max(...aparicoes) : 0;
+            }
+        }
+
+        function analisarSequencias() {
+            sequenciasOrdemSorteio = [];
+            sequenciasOrdemCrescente = [];
+            
+            todosResultados.forEach((resultado, index) => {
+                // Analisar sequências na ordem de sorteio
+                const sequenciasSorteio = encontrarSequencias(resultado.numerosOrdemSorteio);
+                sequenciasSorteio.forEach(seq => {
+                    sequenciasOrdemSorteio.push({
+                        concurso: resultado.concurso,
+                        sequencia: seq,
+                        tipo: 'ordem_sorteio'
+                    });
+                });
+                
+                // Analisar sequências na ordem crescente
+                const sequenciasCrescente = encontrarSequencias(resultado.numerosOrdemCrescente);
+                sequenciasCrescente.forEach(seq => {
+                    sequenciasOrdemCrescente.push({
+                        concurso: resultado.concurso,
+                        sequencia: seq,
+                        tipo: 'ordem_crescente'
+                    });
+                });
+            });
+        }
+
+        function encontrarSequenciasOrdemSorteio(numeros) {
+            const sequencias = [];
+            
+            // Para ordem de sorteio, buscar sequências nas posições adjacentes
+            for (let i = 0; i < numeros.length - 1; i++) {
+                const sequencia = [numeros[i]];
+                
+                // Continuar enquanto os próximos números forem consecutivos
+                for (let j = i + 1; j < numeros.length; j++) {
+                    if (numeros[j] === sequencia[sequencia.length - 1] + 1) {
+                        sequencia.push(numeros[j]);
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Só adicionar se for uma sequência real (2 ou mais números consecutivos)
+                if (sequencia.length >= 2) {
+                    sequencias.push([...sequencia]);
+                }
+            }
+            
+            return sequencias;
+        }
+
+        function encontrarSequenciasOrdemCrescente(numeros) {
+            const sequencias = [];
+            const numerosOrdenados = [...numeros].sort((a, b) => a - b);
+            
+            let i = 0;
+            while (i < numerosOrdenados.length) {
+                const sequencia = [numerosOrdenados[i]];
+                let j = i + 1;
+                
+                // Continuar enquanto os números forem consecutivos
+                while (j < numerosOrdenados.length && numerosOrdenados[j] === numerosOrdenados[j - 1] + 1) {
+                    sequencia.push(numerosOrdenados[j]);
+                    j++;
+                }
+                
+                // Só adicionar se for uma sequência real (2 ou mais números consecutivos)
+                if (sequencia.length >= 2) {
+                    sequencias.push([...sequencia]);
+                }
+                
+                i = j;
+            }
+            
+            return sequencias;
+        }
+
+        function encontrarSequencias(numeros) {
+            // Esta função é mantida para compatibilidade com o código existente
+            return encontrarSequenciasOrdemCrescente(numeros);
+        }
+
+        function numeroFazParteDeSequencia(numero, sequencias) {
+            return sequencias.some(seq => seq.includes(numero));
+        }
+
+        function calcularEstatisticas() {
+            const totalConcursos = todosResultados.length;
+            let totalRepeticoes = 0;
+            
+            // Contar repetições consecutivas
+            for (let numero = 1; numero <= 31; numero++) {
+                totalRepeticoes += repeticoesConsecutivas[numero].consecutivas;
+            }
+            
+            estatisticas = {
+                totalConcursos: totalConcursos,
+                repeticoesConsecutivas: totalRepeticoes,
+                sequenciasSorteio: sequenciasOrdemSorteio.length,
+                sequenciasCrescente: sequenciasOrdemCrescente.length,
+                percentualRepeticao: totalConcursos > 1 ? ((totalRepeticoes / (totalConcursos - 1)) * 100 / 7).toFixed(2) : 0
+            };
+        }
+
+        function exibirResultados() {
+            // Mostrar seções
+            document.getElementById('resumoSection').classList.remove('hidden');
+            document.getElementById('frequenciaSection').classList.remove('hidden');
+            document.getElementById('sequenciasSection').classList.remove('hidden');
+            document.getElementById('repeticoesSection').classList.remove('hidden');
+            document.getElementById('historicoSection').classList.remove('hidden');
+            
+            // Atualizar resumo estatístico
+            document.getElementById('totalConcursos').textContent = estatisticas.totalConcursos;
+            document.getElementById('repeticoesConsecutivas').textContent = estatisticas.repeticoesConsecutivas;
+            document.getElementById('sequenciasSorteio').textContent = estatisticas.sequenciasSorteio;
+            document.getElementById('sequenciasCrescente').textContent = estatisticas.sequenciasCrescente;
+            document.getElementById('percentualRepeticao').textContent = `${estatisticas.percentualRepeticao}%`;
+            
+            // Exibir frequência dos números
+            exibirFrequencias();
+            
+            // Exibir sequências
+            exibirSequencias();
+            
+            // Exibir tabela de repetições
+            exibirTabelaRepeticoes();
+            
+            // Exibir histórico
+            exibirHistorico();
+            
+            // Exibir visualização tabular
+            exibirVisualizacaoTabular('sorteio');
+            
+            // Configurar filtro do histórico
+            document.getElementById('filtroHistorico').addEventListener('input', filtrarHistorico);
+        }
+
+        function exibirFrequencias() {
+            const container = document.getElementById('numerosFrequencia');
+            container.innerHTML = '';
+            
+            // Encontrar maior e menor frequência para cores
+            const frequencias = Object.values(frequenciaNumeros).map(f => f.total);
+            const maxFreq = Math.max(...frequencias);
+            const minFreq = Math.min(...frequencias);
+            
+            for (let i = 1; i <= 31; i++) {
+                const freq = frequenciaNumeros[i];
+                const div = document.createElement('div');
+                div.className = 'relative p-3 rounded-lg border text-center cursor-pointer transition-all hover:scale-105';
+                
+                // Determinar cor baseada na frequência
+                let corFundo = '';
+                if (freq.total === maxFreq) {
+                    corFundo = 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700';
+                } else if (freq.total === minFreq) {
+                    corFundo = 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700';
+                } else {
+                    corFundo = 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700';
+                }
+                
+                div.className += ` ${corFundo}`;
+                div.id = `numero-${i}`;
+                
+                div.innerHTML = `
+                    <div class="font-bold text-lg text-gray-800 dark:text-white">${i.toString().padStart(2, '0')}</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400">${freq.total}x</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400">${freq.porcentagem}%</div>
+                `;
+                
+                container.appendChild(div);
+            }
+        }
+
+        function exibirSequencias() {
+            // Sequências na ordem de sorteio
+            const containerSorteio = document.getElementById('sequenciasOrdemSorteio');
+            containerSorteio.innerHTML = '';
+            
+            const sequenciasSorteioAgrupadas = {};
+            sequenciasOrdemSorteio.forEach(item => {
+                const key = item.sequencia.join('-');
+                if (!sequenciasSorteioAgrupadas[key]) {
+                    sequenciasSorteioAgrupadas[key] = { sequencia: item.sequencia, concursos: [] };
+                }
+                sequenciasSorteioAgrupadas[key].concursos.push(item.concurso);
+            });
+            
+            Object.values(sequenciasSorteioAgrupadas).forEach(grupo => {
+                const div = document.createElement('div');
+                div.className = 'bg-white dark:bg-gray-700 p-3 rounded border';
+                div.innerHTML = `
+                    <div class="font-semibold text-gray-800 dark:text-white">
+                        Sequência: ${grupo.sequencia.map(n => n.toString().padStart(2, '0')).join(' → ')}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        Aparições: ${grupo.concursos.length} vez(es) - Concursos: ${grupo.concursos.slice(0, 5).join(', ')}${grupo.concursos.length > 5 ? '...' : ''}
+                    </div>
+                `;
+                containerSorteio.appendChild(div);
+            });
+            
+            // Sequências em ordem crescente
+            const containerCrescente = document.getElementById('sequenciasOrdemCrescente');
+            containerCrescente.innerHTML = '';
+            
+            const sequenciasCrescenteAgrupadas = {};
+            sequenciasOrdemCrescente.forEach(item => {
+                const key = item.sequencia.join('-');
+                if (!sequenciasCrescenteAgrupadas[key]) {
+                    sequenciasCrescenteAgrupadas[key] = { sequencia: item.sequencia, concursos: [] };
+                }
+                sequenciasCrescenteAgrupadas[key].concursos.push(item.concurso);
+            });
+            
+            Object.values(sequenciasCrescenteAgrupadas).forEach(grupo => {
+                const div = document.createElement('div');
+                div.className = 'bg-white dark:bg-gray-700 p-3 rounded border';
+                div.innerHTML = `
+                    <div class="font-semibold text-gray-800 dark:text-white">
+                        Sequência: ${grupo.sequencia.map(n => n.toString().padStart(2, '0')).join(' → ')}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        Aparições: ${grupo.concursos.length} vez(es) - Concursos: ${grupo.concursos.slice(0, 5).join(', ')}${grupo.concursos.length > 5 ? '...' : ''}
+                    </div>
+                `;
+                containerCrescente.appendChild(div);
+            });
+        }
+
+        function exibirTabelaRepeticoes() {
+            const tbody = document.getElementById('tabelaRepeticoes');
+            tbody.innerHTML = '';
+            
+            // Ordenar por número de repetições consecutivas
+            const numerosOrdenados = [];
+            for (let i = 1; i <= 31; i++) {
+                numerosOrdenados.push({
+                    numero: i,
+                    ...repeticoesConsecutivas[i],
+                    frequenciaTotal: frequenciaNumeros[i].porcentagem
+                });
+            }
+            
+            numerosOrdenados.sort((a, b) => b.consecutivas - a.consecutivas);
+            
+            numerosOrdenados.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700';
+                tr.innerHTML = `
+                    <td class="p-2 font-semibold text-gray-800 dark:text-white">${item.numero.toString().padStart(2, '0')}</td>
+                    <td class="p-2 text-gray-600 dark:text-gray-400">${item.consecutivas}</td>
+                    <td class="p-2 text-gray-600 dark:text-gray-400">${item.maiorSequencia}</td>
+                    <td class="p-2 text-gray-600 dark:text-gray-400">Concurso ${item.ultimaAparicao}</td>
+                    <td class="p-2 text-gray-600 dark:text-gray-400">${item.frequenciaTotal}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function exibirHistorico() {
+            const container = document.getElementById('historicoJogos');
+            container.innerHTML = '';
+            
+            // Ordenar por concurso (mais recente primeiro)
+            const resultadosOrdenados = [...todosResultados].sort((a, b) => b.concurso - a.concurso);
+            
+            resultadosOrdenados.forEach(resultado => {
+                const div = document.createElement('div');
+                div.className = 'bg-white dark:bg-gray-700 p-4 rounded border';
+                div.dataset.concurso = resultado.concurso;
+                div.dataset.numeros = resultado.numerosOrdemSorteio.join(',');
+                div.id = `concurso-${resultado.concurso}`;
+                
+                // Identificar sequências neste jogo
+                const sequenciasSorteio = encontrarSequencias(resultado.numerosOrdemSorteio);
+                const sequenciasCrescente = encontrarSequencias(resultado.numerosOrdemCrescente);
+                
+                div.innerHTML = `
+                    <div class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                        <!-- Cabeçalho do Concurso -->
+                        <div class="bg-dia-sorte p-4 text-white">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h4 class="text-lg font-bold">🎯 Concurso ${resultado.concurso} - ${resultado.data}</h4>
+                                    <p class="text-sm opacity-90">${resultado.local || 'SÃO PAULO, SP'}</p>
+                                </div>
+                                ${resultado.mesSorte ? `
+                                    <div class="text-right">
+                                        <div class="text-xs opacity-75">Mês da Sorte</div>
+                                        <div class="font-semibold">${resultado.mesSorte}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <!-- Conteúdo do Sorteio -->
+                        <div class="p-4 bg-white dark:bg-gray-700">
+                            <!-- Ordem de Sorteio -->
+                            <div class="mb-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center">
+                                        <span class="w-6 h-6 bg-sorteio-orange text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">🎲</span>
+                                        <strong class="text-gray-800 dark:text-white">Ordem de Sorteio:</strong>
+                                    </div>
+                                    ${sequenciasSorteio.length > 0 ? `
+                                        <span class="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-3 py-1 rounded-full font-semibold">
+                                            ${sequenciasSorteio.length} sequência(s)
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                <div class="flex gap-2 flex-wrap justify-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg" id="sorteio-${resultado.concurso}">
+                                    ${resultado.numerosOrdemSorteio.map((n, index) => `
+                                        <span class="numero-sorteio w-12 h-12 bg-sorteio-orange text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg transition-all hover:scale-110 hover:shadow-xl" 
+                                              data-numero="${n}" data-posicao="${index}" data-concurso="${resultado.concurso}">
+                                            ${n.toString().padStart(2, '0')}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                                ${sequenciasSorteio.length > 0 ? `
+                                    <div class="text-xs text-sorteio-orange mt-2 text-center font-medium">
+                                        Sequências: ${sequenciasSorteio.map(seq => seq.map(n => n.toString().padStart(2, '0')).join('→')).join(' • ')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <!-- Ordem Crescente -->
+                            <div class="mb-3">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center">
+                                        <span class="w-6 h-6 bg-crescente-purple text-white rounded-full flex items-center justify-center text-xs font-bold mr-2">📊</span>
+                                        <strong class="text-gray-800 dark:text-white">Ordem Crescente:</strong>
+                                    </div>
+                                    ${sequenciasCrescente.length > 0 ? `
+                                        <span class="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 px-3 py-1 rounded-full font-semibold">
+                                            ${sequenciasCrescente.length} sequência(s)
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                <div class="flex gap-2 flex-wrap justify-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg" id="crescente-${resultado.concurso}">
+                                    ${resultado.numerosOrdemCrescente.map((n, index) => `
+                                        <span class="numero-crescente w-12 h-12 bg-crescente-purple text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg transition-all hover:scale-110 hover:shadow-xl" 
+                                              data-numero="${n}" data-posicao="${index}" data-concurso="${resultado.concurso}">
+                                            ${n.toString().padStart(2, '0')}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                                ${sequenciasCrescente.length > 0 ? `
+                                    <div class="text-xs text-crescente-purple mt-2 text-center font-medium">
+                                        Sequências: ${sequenciasCrescente.map(seq => seq.map(n => n.toString().padStart(2, '0')).join('→')).join(' • ')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <!-- Análise de Repetição -->
+                            ${resultado.concurso > 1 ? gerarAnaliseRepeticao(resultado) : ''}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+
+        function gerarAnaliseRepeticao(resultadoAtual) {
+            const jogoAnterior = todosResultados.find(r => r.concurso === resultadoAtual.concurso - 1);
+            if (!jogoAnterior) return '';
+            
+            const repeticoes = resultadoAtual.numerosOrdemCrescente.filter(n => 
+                jogoAnterior.numerosOrdemCrescente.includes(n)
+            );
+            
+            if (repeticoes.length === 0) return '';
+            
+            return `
+                <div class="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                    <div class="text-xs text-yellow-700 dark:text-yellow-400 font-semibold mb-1">
+                        🔄 Repetições do concurso anterior (${jogoAnterior.concurso}): ${repeticoes.length} número(s)
+                    </div>
+                    <div class="flex gap-1">
+                        ${repeticoes.map(n => `
+                            <span class="w-6 h-6 bg-yellow-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                ${n.toString().padStart(2, '0')}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function marcarSequencias() {
+            // Resetar marcações anteriores
+            sequenciasMarcadas = [];
+            
+            // Encontrar todas as sequências nos números
+            const todasSequencias = new Set();
+            
+            // Adicionar sequências da ordem de sorteio
+            sequenciasOrdemSorteio.forEach(item => {
+                const key = item.sequencia.join('-');
+                todasSequencias.add(key);
+                item.sequencia.forEach(num => sequenciasMarcadas.push(num));
+            });
+            
+            // Adicionar sequências da ordem crescente
+            sequenciasOrdemCrescente.forEach(item => {
+                const key = item.sequencia.join('-');
+                todasSequencias.add(key);
+                item.sequencia.forEach(num => sequenciasMarcadas.push(num));
+            });
+            
+            // Remover duplicatas
+            sequenciasMarcadas = [...new Set(sequenciasMarcadas)];
+            
+            // Atualizar visual dos números
+            for (let i = 1; i <= 31; i++) {
+                const elemento = document.getElementById(`numero-${i}`);
+                if (elemento) {
+                    if (sequenciasMarcadas.includes(i)) {
+                        elemento.className = elemento.className.replace(/bg-(red|yellow|blue)-100.*?border-(red|yellow|blue)-300.*?/g, '');
+                        elemento.className += ' bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700';
+                    }
+                }
+            }
+            
+            // Mostrar mensagem
+            const totalSequencias = todasSequencias.size;
+            const totalNumeros = sequenciasMarcadas.length;
+            
+            // Marcar sequências visualmente nos resultados históricos
+            marcarSequenciasNosResultados();
+            
+            showNotification(`✅ Marcadas ${totalSequencias} sequências diferentes envolvendo ${totalNumeros} números únicos nos resultados!`, 'success');
+        }
+
+        function marcarSequenciasNosResultados() {
+            todosResultados.forEach(resultado => {
+                const sequenciasSorteio = encontrarSequencias(resultado.numerosOrdemSorteio);
+                const sequenciasCrescente = encontrarSequencias(resultado.numerosOrdemCrescente);
+                
+                // Marcar sequências na ordem de sorteio
+                sequenciasSorteio.forEach(sequencia => {
+                    marcarSequenciaNoJogo(resultado.concurso, 'sorteio', sequencia, resultado.numerosOrdemSorteio);
+                });
+                
+                // Marcar sequências na ordem crescente
+                sequenciasCrescente.forEach(sequencia => {
+                    marcarSequenciaNoJogo(resultado.concurso, 'crescente', sequencia, resultado.numerosOrdemCrescente);
+                });
+            });
+        }
+
+        function marcarSequenciaNoJogo(concurso, tipo, sequencia, numerosCompletos) {
+            const containerId = tipo === 'sorteio' ? `sorteio-${concurso}` : `crescente-${concurso}`;
+            const container = document.getElementById(containerId);
+            
+            if (!container) return;
+            
+            const numerosElementos = container.querySelectorAll(`.numero-${tipo}`);
+            
+            // Encontrar as posições da sequência nos números
+            for (let i = 0; i < numerosCompletos.length - sequencia.length + 1; i++) {
+                let isSequencia = true;
+                for (let j = 0; j < sequencia.length; j++) {
+                    if (numerosCompletos[i + j] !== sequencia[j]) {
+                        isSequencia = false;
+                        break;
+                    }
+                }
+                
+                if (isSequencia) {
+                    // Marcar os elementos da sequência
+                    for (let j = 0; j < sequencia.length; j++) {
+                        const elemento = numerosElementos[i + j];
+                        if (elemento) {
+                            // Adicionar classes para sequência
+                            elemento.classList.add('sequencia-marcada');
+                            
+                            // Cores diferentes para tipos de sequência
+                            if (tipo === 'sorteio') {
+                                elemento.classList.remove('bg-sorteio-orange');
+                                elemento.classList.add('bg-gradient-to-r', 'from-orange-500', 'to-red-500');
+                                elemento.style.boxShadow = '0 0 15px rgba(255, 107, 53, 0.8)';
+                            } else {
+                                elemento.classList.remove('bg-crescente-purple');
+                                elemento.classList.add('bg-gradient-to-r', 'from-purple-500', 'to-blue-500');
+                                elemento.style.boxShadow = '0 0 15px rgba(139, 92, 246, 0.8)';
+                            }
+                            
+                            // Adicionar indicador visual
+                            if (j === 0) {
+                                elemento.style.borderLeft = '3px solid #fff';
+                            }
+                            if (j === sequencia.length - 1) {
+                                elemento.style.borderRight = '3px solid #fff';
+                            }
+                            
+                            // Adicionar tooltip
+                            elemento.title = `Sequência: ${sequencia.map(n => n.toString().padStart(2, '0')).join('→')}`;
+                        }
+                    }
+                    break; // Para na primeira ocorrência
+                }
+            }
+        }
+
+        function resetarMarcacoes() {
+            sequenciasMarcadas = [];
+            
+            // Resetar cores na grade de frequência
+            exibirFrequencias();
+            
+            // Resetar marcações nos resultados
+            resetarMarcacoesNosResultados();
+            
+            showNotification('🔄 Todas as marcações foram resetadas!', 'info');
+        }
+
+        function resetarMarcacoesNosResultados() {
+            // Resetar todos os elementos marcados
+            const elementosMarcados = document.querySelectorAll('.sequencia-marcada');
+            
+            elementosMarcados.forEach(elemento => {
+                elemento.classList.remove('sequencia-marcada');
+                elemento.classList.remove('bg-gradient-to-r', 'from-orange-500', 'to-red-500', 'from-purple-500', 'to-blue-500');
+                elemento.style.boxShadow = '';
+                elemento.style.borderLeft = '';
+                elemento.style.borderRight = '';
+                elemento.title = '';
+                
+                // Restaurar cores originais
+                if (elemento.classList.contains('numero-sorteio')) {
+                    elemento.classList.add('bg-dia-sorte');
+                } else if (elemento.classList.contains('numero-crescente')) {
+                    elemento.classList.add('bg-primary');
+                }
+            });
+        }
+
+        function resetarMarcacoesOriginal() {
+            sequenciasMarcadas = [];
+            exibirFrequencias(); // Re-exibir com cores originais
+            showNotification('🔄 Marcações resetadas!', 'info');
+        }
+
+        function filtrarHistorico() {
+            const filtro = document.getElementById('filtroHistorico').value.toLowerCase();
+            const jogos = document.querySelectorAll('#historicoJogos > div');
+            
+            jogos.forEach(jogo => {
+                const concurso = jogo.dataset.concurso.toLowerCase();
+                const numeros = jogo.dataset.numeros.toLowerCase();
+                
+                if (concurso.includes(filtro) || numeros.includes(filtro)) {
+                    jogo.style.display = 'flex';
+                } else {
+                    jogo.style.display = 'none';
+                }
+            });
+        }
+
+        function exportarDados() {
+            const dados = {
+                estatisticas: estatisticas,
+                frequencias: frequenciaNumeros,
+                repeticoes: repeticoesConsecutivas,
+                sequenciasOrdemSorteio: sequenciasOrdemSorteio,
+                sequenciasOrdemCrescente: sequenciasOrdemCrescente,
+                historico: todosResultados,
+                dataAnalise: new Date().toLocaleString('pt-BR')
+            };
+            
+            const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `dia_de_sorte_analise_completa_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification('📋 Análise exportada com sucesso!', 'success');
+        }
+
+        function recarregarDados() {
+            if (window.confirm('Deseja recarregar todos os dados? Isso pode levar alguns minutos.')) {
+                location.reload();
+            }
+        }
+
+        function gerarDadosSimulados() {
+            // Gerar dados simulados em caso de erro na API
+            todosResultados = [];
+            const totalSimulado = 100;
+            
+            for (let i = 1; i <= totalSimulado; i++) {
+                const numeros = [];
+                while (numeros.length < 7) {
+                    const num = Math.floor(Math.random() * 31) + 1;
+                    if (!numeros.includes(num)) {
+                        numeros.push(num);
+                    }
+                }
+                
+                todosResultados.push({
+                    concurso: i,
+                    data: new Date().toLocaleDateString('pt-BR'),
+                    numerosOrdemSorteio: numeros,
+                    numerosOrdemCrescente: [...numeros].sort((a, b) => a - b),
+                    mes: 'Simulado',
+                    observacao: 'Dados simulados'
+                });
+            }
+            
+            // Processar análises com dados simulados
+            analisarFrequencias();
+            analisarRepeticoesConsecutivas();
+            analisarSequencias();
+            calcularEstatisticas();
+        }
+
+        function exibirVisualizacaoTabular(tipo = 'sorteio') {
+            const tbody = document.getElementById('corpoTabelaSequencias');
+            tbody.innerHTML = '';
+            
+            // Ordenar por concurso (mais recente primeiro)
+            const resultadosOrdenados = [...todosResultados].sort((a, b) => b.concurso - a.concurso);
+            
+            resultadosOrdenados.forEach((resultado, index) => {
+                const numeros = tipo === 'sorteio' ? resultado.numerosOrdemSorteio : resultado.numerosOrdemCrescente;
+                
+                // Usar a função correta para detectar sequências baseada no tipo
+                const sequencias = tipo === 'sorteio' ? 
+                    encontrarSequenciasOrdemSorteio(numeros) : 
+                    encontrarSequenciasOrdemCrescente(numeros);
+                
+                // Encontrar repetições do concurso anterior
+                let repeticoes = [];
+                if (index < resultadosOrdenados.length - 1) {
+                    const concursoAnterior = resultadosOrdenados[index + 1];
+                    const numerosAnteriores = tipo === 'sorteio' ? 
+                        concursoAnterior.numerosOrdemSorteio : 
+                        concursoAnterior.numerosOrdemCrescente;
+                    repeticoes = numeros.filter(n => numerosAnteriores.includes(n));
+                }
+                
+                const tr = document.createElement('tr');
+                tr.className = 'border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700';
+                
+                // Célula do concurso
+                let htmlCelulas = `
+                    <td class="p-2 font-semibold text-gray-800 dark:text-white border-r border-gray-300 dark:border-gray-500">
+                        ${resultado.concurso}
+                    </td>
+                `;
+                
+                // Células dos números
+                numeros.forEach((numero, pos) => {
+                    let corFundo = 'bg-white dark:bg-gray-700';
+                    let corTexto = 'text-gray-800 dark:text-white';
+                    
+                    // Verificar se faz parte de sequência
+                    let fazParteSequencia = false;
+                    let tamanhoSequencia = 1;
+                    
+                    sequencias.forEach(seq => {
+                        if (seq.includes(numero)) {
+                            fazParteSequencia = true;
+                            tamanhoSequencia = Math.max(tamanhoSequencia, seq.length);
+                        }
+                    });
+                    
+                    // Verificar se é repetição do concurso anterior
+                    const isRepeticao = repeticoes.includes(numero);
+                    
+                    if (isRepeticao && fazParteSequencia) {
+                        // Número é repetição E sequência - priorizar sequência
+                        if (tamanhoSequencia === 2) {
+                            corFundo = 'bg-green-400';
+                            corTexto = 'text-white';
+                        } else if (tamanhoSequencia === 3) {
+                            corFundo = 'bg-blue-500';
+                            corTexto = 'text-white';
+                        } else if (tamanhoSequencia >= 4) {
+                            corFundo = 'bg-purple-600';
+                            corTexto = 'text-white';
+                        }
+                    } else if (fazParteSequencia) {
+                        // Apenas sequência
+                        if (tamanhoSequencia === 2) {
+                            corFundo = 'bg-green-500';
+                            corTexto = 'text-white';
+                        } else if (tamanhoSequencia === 3) {
+                            corFundo = 'bg-blue-500';
+                            corTexto = 'text-white';
+                        } else if (tamanhoSequencia >= 4) {
+                            corFundo = 'bg-purple-600';
+                            corTexto = 'text-white';
+                        }
+                    } else if (isRepeticao) {
+                        // Apenas repetição
+                        corFundo = 'bg-yellow-400';
+                        corTexto = 'text-gray-800';
+                    }
+                    
+                    htmlCelulas += `
+                        <td class="p-2 text-center font-semibold ${corFundo} ${corTexto} border-r border-gray-300 dark:border-gray-500">
+                            ${numero.toString().padStart(2, '0')}
+                        </td>
+                    `;
+                });
+                
+                // Célula do mês
+                htmlCelulas += `
+                    <td class="p-2 text-center text-gray-600 dark:text-gray-400 text-xs">
+                        ${resultado.mesSorte || 'N/A'}
+                    </td>
+                `;
+                
+                tr.innerHTML = htmlCelulas;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function alternarVisualizacao(tipo) {
+            const btnSorteio = document.getElementById('btnVisualizacaoSorteio');
+            const btnCrescente = document.getElementById('btnVisualizacaoCrescente');
+            
+            if (tipo === 'sorteio') {
+                btnSorteio.className = 'px-4 py-2 bg-sorteio-orange text-white rounded-lg text-sm font-semibold transition-colors';
+                btnCrescente.className = 'px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-semibold transition-colors';
+            } else {
+                btnSorteio.className = 'px-4 py-2 bg-gray-400 text-white rounded-lg text-sm font-semibold transition-colors';
+                btnCrescente.className = 'px-4 py-2 bg-crescente-purple text-white rounded-lg text-sm font-semibold transition-colors';
+            }
+            
+            exibirVisualizacaoTabular(tipo);
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            } text-white`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
